@@ -46,6 +46,48 @@ passport.use(new localStrategy(
     })
 )
 
+router.post("/api/register", (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+    console.log(username)
+    users.find({ username: username }).then(data => {
+        if (data.length > 0) {
+            return res.status(400).json({ error: "Username already taken" });
+        } else if (data.length == 0) {
+            bcrypt.hash(req.body.password, 10).then(hash => {
+                users.insertMany([{
+                    username: username,
+                    password: hash,
+                }]).then(data => {
+                    res.status(201).json({ message: "User registered successfully" });
+                });
+            })
+
+        }
+    });
+})
+// Login route
+router.post("/api/login", passport.authenticate("local"), (req, res) => {
+    res.status(200).json({ message: "Login successful" });
+});
+
+// Logout route
+router.get("/api/logout", (req, res) => {
+    req.logout(err => {
+        res.status(200).json({ message: "Logout successful" });
+    })
+
+});
+
+// Check if authenticated
+router.get("/api/authenticated", (req, res) => {
+    if (req.isAuthenticated()) {
+        res.status(200).json({ authenticated: true });
+    } else {
+        res.status(401).json({ authenticated: false });
+    }
+});
+
 router.route("/register").get((req, res, next) => {
     if (req.isAuthenticated() == false) {
         return next();
@@ -101,4 +143,5 @@ router.get("/logout", (req, res, next) => {
         res.redirect("/login")
     })
 })
+
 module.exports = router
