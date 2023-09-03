@@ -46,7 +46,13 @@ passport.use(new localStrategy(
     })
 )
 
-router.post("/api/register", (req, res) => {
+router.post("/api/register", (req, res, next) => {
+    if (req.isAuthenticated() == false) {
+        return next();
+    } else if (req.isUnauthenticated() == false) {
+        res.json({ message: "User already logged in" })
+    }
+}, (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
     console.log(username)
@@ -67,7 +73,13 @@ router.post("/api/register", (req, res) => {
     });
 })
 // Login route
-router.post("/api/login", passport.authenticate("local"), (req, res) => {
+router.post("/api/login", (req, res, next) => {
+    if (req.isAuthenticated() == false) {
+        return next();
+    } else if (req.isUnauthenticated() == false) {
+        res.json({ message: "User already logged in" })
+    }
+}, passport.authenticate("local"), (req, res) => {
     res.status(200).json({ message: "Login successful" });
 });
 
